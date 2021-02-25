@@ -12,16 +12,16 @@ So, how do you know if the letters have been changed? Use `count-letters-pct` to
 ### Correlation
 The `correlate` function in analysis.lisp computes a correlation coefficient. It may vary slightly from other ways of defining a correlation coefficient, but the formula here is:
 
-Let c1 and c2 be the arrays of values you want to compare.
-Let sx = the sum of all the items in c1
-Let sx2 = the sum of the squares of all the items in c1
-Let sy = the sum of all the items in c2
-Let sy2 = the sum of all the items in c2
-Let sxy = the sum of the products of corresponding items in c1 and c2 (i.e. c1[0] * c2[0] + c1[1] * c2[1] + ...)
+Let c1 and c2 be the arrays of values you want to compare.  
+Let sx = the sum of all the items in c1  
+Let sx2 = the sum of the squares of all the items in c1  
+Let sy = the sum of all the items in c2  
+Let sy2 = the sum of all the items in c2  
+Let sxy = the sum of the products of corresponding items in c1 and c2 (i.e. c1[0] * c2[0] + c1[1] * c2[1] + ...)  
 
-Let sxy_adj = sxy - (sx * sy) / number-of-items
-Let sx2_adj = sx2 - (sx * sx) / number-of-items
-Let sy2_adj = sy2 - (sy * sy) / number-of-items
+Let sxy_adj = sxy - (sx * sy) / number-of-items  
+Let sx2_adj = sx2 - (sx * sx) / number-of-items  
+Let sy2_adj = sy2 - (sy * sy) / number-of-items  
 
 The correlation coefficient is then sxy_adj / sqrt (sx2_adj * sy2_adj)
 
@@ -29,8 +29,8 @@ A good rule of thumb for me has been that a value above 0.6 tends to indicate a 
 
 ### Index of Coincidence
 The index of coincidence is sometimes used to compare two texts, but can also be used to determine if a text contains a single alphabet or multiples (a polyalphabetic cipher). The way it is computed in the `compute-ic` function in analysis.lisp is this:
-Let c = the counts of the letters in the ciphertext
-Let fsum = the sum of the squares of the counts (I am summing square - 1 of the counts, I don't think it matters).
+Let c = the counts of the letters in the ciphertext  
+Let fsum = the sum of the squares of the counts (I am summing square - 1 of the counts, I don't think it matters).  
 The Index of coincidence is fsum / square(number-of-letters). This value is usually in the 0.06 - 0.08 range for English text. It is lower when there are multiple keys.
 
 ### Cracking a Vigenere Cipher

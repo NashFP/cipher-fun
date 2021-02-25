@@ -28,7 +28,8 @@ The correlation coefficient is then sxy_adj / sqrt (sx2_adj * sy2_adj)
 A good rule of thumb for me has been that a value above 0.6 tends to indicate a good correlation, but often I just search for the maximum value.
 
 ### Index of Coincidence
-The index of coincidence is sometimes used to compare two texts, but can also be used to determine if a text contains a single alphabet or multiples (a polyalphabetic cipher). The way it is computed in the `compute-ic` function in analysis.lisp is this:
+The index of coincidence is sometimes used to compare two texts, but can also be used to determine if a text contains a single alphabet or multiples (a polyalphabetic cipher). The way it is computed in the `compute-ic` function in analysis.lisp is this:  
+
 Let c = the counts of the letters in the ciphertext  
 Let fsum = the sum of the squares of the counts (I am summing square - 1 of the counts, I don't think it matters).  
 The Index of coincidence is fsum / square(number-of-letters). This value is usually in the 0.06 - 0.08 range for English text. It is lower when there are multiple keys.
@@ -102,9 +103,6 @@ CL-USER>
 
 To try the shotgun-hillclimbing, you can do this:
 ```
-(load "analysis.lisp")
-(load "dawg.lisp")
-(load "scoring.lisp")
 (load "shotgun-hillclimb.lisp")
 (load "quotes.lisp")
 (setf enable1 (load-dawg "enable1.daw"))

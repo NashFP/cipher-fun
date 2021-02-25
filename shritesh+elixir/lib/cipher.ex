@@ -1,0 +1,2 @@
+defmodule Cipher do
+end

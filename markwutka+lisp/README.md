@@ -115,12 +115,13 @@ CL-USER>
 To try the shotgun-hillclimbing, you can do this:
 ```
 (load "shotgun-hillclimb.lisp")
+(load "scoring.lisp")
 (load "quotes.lisp")
 (setf enable1 (load-dawg "enable1.daw"))
 (setf plaintext (string-to-26 mccarthy-oldest))
 (setf enc-key (make-key "johnmccarthy" 10))
 (setf ciphertext (do-substitution plaintext enc-key))
-(shotgun-hillclimb ciphertext enable1 0.9)
+(shotgun-hillclimb ciphertext enable1 #'score-segment 0.9)
 ```
 If you are running this via SLIME in Emacs, hit c-c c-c to interrupt it
 if you get impatient. The last parameter to shotgun-hillclimb is the
@@ -128,6 +129,12 @@ percentage of the decrypted text that should be part of a word. You
 probably don't want to try for 100% because the text might contain
 words that aren't in the dictionary. Once it hits the target percentage
 it returns the key it found.
+
+The `#'score-segment` passes a scoring function because I am
+experimenting with an alternative scoring where instead of looking for
+the longest word, I find all lengths of words and try scoring with each,
+which seems like it should be more accurate, but doesn't make a
+noticeable difference in speed or accuracy so far.
 
 ## Using the DAWG Dictionary File
 The enable1.daw file is a Directed Acyclic Word Graph encoded into a
@@ -200,12 +207,12 @@ can follow a word. (FYI, Steven Gordon proposed a structure called a
 GADDAG in 1994 that let you do fast lookups on what letters can precede
 a word - [https://ericsink.com/downloads/faster-scrabble-gordon.pdf]).
 
-For cipher-cracking purposes, we are more concerned with finding the
-longest word at a given point, although at some point I may try
-looking for all lengths of words at a given point and trying each. 
+For cipher-cracking purposes, we want to find either the longest
+possible word, or all the words possible from a given starting point.
 In this case, we just keep following the graph matching the letters
-we have, and every time we hit an "is-end-of-word" we note that as the
-new longest word. If we hit an is-end-of-list without matching, we
+we have, and every time we hit an "is-end-of-word" we note as
+either the new longest word or just another possible word length.
+If we hit an is-end-of-list without matching, we
 stop searching because that means the current letter cannot follow
 the ones before it in the dictionary.
 

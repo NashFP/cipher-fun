@@ -34,7 +34,7 @@
 ;;; key to see if that improves the overall score. If the best key is the same as
 ;;; the original key, then there were no swaps better than the original key, so
 ;;; we are done. Otherwise, take the new best key and again look for the best swap.
-(defun hillclimb-start (start-key ciphertext dawg best-score)
+(defun hillclimb-start (start-key ciphertext dawg best-score scoring-func)
   ;;; Create a local copy of the starting key
   (let ((key (map 'vector #'identity start-key))
 	;;; Create a destination to decrypt into so we aren't allocating this every
@@ -47,7 +47,7 @@
 				   ;;; the possible swaps again to find another improvement
 				   (progn
 				     (hillclimb-start (map 'vector #'identity best-key)
-						      ciphertext dawg best-score)))
+						      ciphertext dawg best-score scoring-func)))
 		   ;;; There's another swap to try...
 		   (progn
 		     ;;; Do the swap
@@ -55,7 +55,7 @@
 		     ;;; Try decrypting with this key
 		     (do-substitution-into ciphertext key plaintext)
 		     ;;; Evaluate the resulting ciphertext
-		     (let ((score (score-segment plaintext 0 dawg nil)))
+		     (let ((score (funcall scoring-func plaintext 0 dawg nil)))
 		       ;;; Is this an improvement?
 		       (if (> score best-score)
 			   (progn
@@ -72,14 +72,14 @@
 			     (hillclimb-iter (cdr swap) best-key best-score))))))))
       (hillclimb-iter (compute-possible-swaps) (map 'vector #'identity start-key) best-score))))
 
-(defun hillclimb (start-key ciphertext dawg)
-  (hillclimb-start start-key ciphertext dawg 0))
+(defun hillclimb (start-key ciphertext dawg scoring-func)
+  (hillclimb-start start-key ciphertext dawg 0 scoring-func))
 
 ;;; We can break out of the shotgun-hillclimb if the words found in the decrypted plaintext
 ;;; amount to a certain percentage of the overall length.
-(defun should-quit (key ciphertext dawg coverage-pct)
+(defun should-quit (key ciphertext dawg scoring-func coverage-pct)
   (let* ((plaintext (do-substitution ciphertext key))
-	 (coverage (score-segment plaintext 0 dawg t)))
+	 (coverage (funcall scoring-func plaintext 0 dawg t)))
     (>= (float (/ coverage (length ciphertext))) coverage-pct)))
 
 ;;; This function tries to guess an initial key by counting the characters in the ciphertext
@@ -99,15 +99,15 @@
 ;;; function to see if it can make improvements. If it was an improvement, it prints out the improved
 ;;; score, key, and decrypted plaintext, and then whether or not there was an improvement, it picks
 ;;; a new random key and tries again.
-(defun shotgun-hillclimb (ciphertext dawg coverage-pct)
+(defun shotgun-hillclimb (ciphertext dawg scoring-func coverage-pct)
   (labels ((shotgun-hillclimb-iter (best-score)
 	     (let ((key (create-random-key)))
 	       (multiple-value-bind (best-key next-best-score)
-		   (hillclimb key ciphertext dawg)
+		   (hillclimb key ciphertext dawg scoring-func)
 		 (if (> next-best-score best-score)
 		     (format t "Score ~A with key ~A: ~A~%" next-best-score (string-from-26 (invert-key best-key))
 			     (string-from-26 (do-substitution ciphertext best-key))))
-		 (if (should-quit best-key ciphertext dawg coverage-pct)
+		 (if (should-quit best-key ciphertext dawg scoring-func coverage-pct)
 		     best-key
 		 ;;; Rather than have two calls to this, one for each branch of the previous if,
 		 ;;; we just do a max of score and next-best-score

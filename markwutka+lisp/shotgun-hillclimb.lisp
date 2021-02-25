@@ -55,7 +55,7 @@
 		     ;;; Try decrypting with this key
 		     (do-substitution-into ciphertext key plaintext)
 		     ;;; Evaluate the resulting ciphertext
-		     (let ((score (score-segment plaintext 0 dawg)))
+		     (let ((score (score-segment plaintext 0 dawg nil)))
 		       ;;; Is this an improvement?
 		       (if (> score best-score)
 			   (progn
@@ -75,6 +75,13 @@
 (defun hillclimb (start-key ciphertext dawg)
   (hillclimb-start start-key ciphertext dawg 0))
 
+;;; We can break out of the shotgun-hillclimb if the words found in the decrypted plaintext
+;;; amount to a certain percentage of the overall length.
+(defun should-quit (key ciphertext dawg coverage-pct)
+  (let* ((plaintext (do-substitution ciphertext key))
+	 (coverage (score-segment plaintext 0 dawg t)))
+    (>= (float (/ coverage (length ciphertext))) coverage-pct)))
+
 ;;; This function tries to guess an initial key by counting the characters in the ciphertext
 ;;; and then assigning the most common one to E, the next to T and so forth.
 ;;; This doesn't seem to work very well, though.
@@ -92,7 +99,7 @@
 ;;; function to see if it can make improvements. If it was an improvement, it prints out the improved
 ;;; score, key, and decrypted plaintext, and then whether or not there was an improvement, it picks
 ;;; a new random key and tries again.
-(defun shotgun-hillclimb (ciphertext dawg)
+(defun shotgun-hillclimb (ciphertext dawg coverage-pct)
   (labels ((shotgun-hillclimb-iter (best-score)
 	     (let ((key (create-random-key)))
 	       (multiple-value-bind (best-key next-best-score)
@@ -100,8 +107,10 @@
 		 (if (> next-best-score best-score)
 		     (format t "Score ~A with key ~A: ~A~%" next-best-score (string-from-26 (invert-key best-key))
 			     (string-from-26 (do-substitution ciphertext best-key))))
+		 (if (should-quit best-key ciphertext dawg coverage-pct)
+		     best-key
 		 ;;; Rather than have two calls to this, one for each branch of the previous if,
 		 ;;; we just do a max of score and next-best-score
-		 (shotgun-hillclimb-iter (max best-score next-best-score))
+		     (shotgun-hillclimb-iter (max best-score next-best-score)))
 		 ))))
     (shotgun-hillclimb-iter 0)))

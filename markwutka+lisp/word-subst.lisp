@@ -192,7 +192,7 @@
 	 ;;; Update the partially-solved plaintext with the new substitutions
 	 (new-pt (apply-substitutions-to-word-list plaintext subs))
 	 ;;; Get the letters that have already been used
-	 (used-letters (remove-if-not #'lower-case-p (apply #'concatenate 'string new-pt)))
+	 (used-letters (remove-duplicates (remove-if-not #'lower-case-p (apply #'concatenate 'string new-pt))))
 	 ;;; For each word, remove any words in its pattern set that couldn't possibly
 	 ;;; match it with the current set of substitutions
 	 (filtered-ct-patterns (filter-patterns new-order ct-patterns used-letters)))

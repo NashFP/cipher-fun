@@ -34,6 +34,24 @@
 (defun list->string (l)
   (convert 'string l))
 
+;;; The American Cryptogram Association used a convention that any proper names in a cipher with
+;;; word breaks would be marked by a * at the beginning of the word. Because it is unlikely these
+;;; words will appear in the dictionary, we can try eliminating them and hope the remaining words
+;;; let us solve the cryptogram. If you aren't using texts from the ACA you can probably ignore
+;;; this function
+(defun eliminate-proper-nouns (ct)
+  (labels ((eliminate-proper-iter (pos in-word accum)
+	     (if (>= pos (length ct)) (reverse accum)
+		 (let ((ch (aref ct pos)))
+		   (if in-word
+		       (if (not (alpha-char-p ch))
+			   (eliminate-proper-iter (1+ pos) nil (cons ch accum))
+			   (eliminate-proper-iter (1+ pos) t accum))
+		       (if (char= ch #\*)
+			   (eliminate-proper-iter (1+ pos) t accum)
+			   (eliminate-proper-iter (1+ pos) nil (cons ch accum))))))))
+    (list->string (eliminate-proper-iter 0 nil '()))))
+
 ;;; Convert a character to a number in the range 0-25
 (defun to-26 (ch)
   (cond ((and (char>= ch #\A) (char<= ch #\Z))

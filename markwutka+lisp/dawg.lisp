@@ -95,4 +95,34 @@
 (defun is-word (w dawg)
   (= (match-word w dawg) (length w)))
 
+(defun match-words-iter (w w-offset dawg dawg-offset longest start-pos)
+  ;;; Get the current node in the dawg
+  (let ((node (aref dawg dawg-offset)))
+    ;;; Does the letter at this node equal the next letter in the word we are matching?
+    (if (= (dawg-node-letter node) (aref w w-offset))
+	;;; If so, have we hit the end of the word (or buffer)?	
+	(if (>= (1+ w-offset) (length w))
+	    ;;; If we have hit the end of the word/buffer, check to see if everything we
+	    ;;; have matched so far is a valid word
+	    (if (dawg-node-is-end-of-word node) (cons (1+ (- w-offset start-pos)) longest)
+		;;; If not, return the longest match we found
+		longest)
+	    ;;; If not the end of the word, check to see if what has matched so far is
+	    ;;; a word, and if so, update longest
+	    (if (dawg-node-is-end-of-word node)
+		(match-words-iter w (1+ w-offset) dawg
+				 (dawg-node-child-index node)
+				 (cons (1+ (- w-offset start-pos)) longest)
+				 start-pos)
+		;;; Otherwise, don't update longest
+		(match-words-iter w (1+ w-offset) dawg
+				 (dawg-node-child-index node) longest start-pos)))
+	(if (dawg-node-is-end-of-list node)
+	    longest
+	    (match-words-iter w w-offset dawg (1+ dawg-offset) longest start-pos)))))
 
+(defun match-words (w dawg)
+  (match-words-iter w 0 dawg (dawg-top dawg) '() 0))
+
+(defun match-words-from (w pos dawg)
+  (match-words-iter w pos dawg (dawg-top dawg) '() pos))

@@ -17,14 +17,22 @@
   (with-open-file (stream filename)
     (loop for line = (read-line stream nil)
        while line
-	 ;;; I append a space here because I expect to join everything together
-       collect (concatenate 'string line " "))))
+       collect line)))
 
 (defun read-file (filename)
-  (apply #'concatenate 'string (read-file-lines filename)))
+  (format nil "~{~A~^ ~}" (read-file-lines filename)))
+
+(defun convert (type item)
+  (map type #'identity item))
 
 (defun list->vector (l)
-  (map 'vector #'identity l))
+  (convert 'vector l))
+
+(defun string->list (s)
+  (convert 'list s))
+
+(defun list->string (l)
+  (convert 'string l))
 
 ;;; Convert a character to a number in the range 0-25
 (defun to-26 (ch)
@@ -185,3 +193,13 @@
 (defun do-substitution-into (l key dest)
   (loop for i from 0 to (1- (length dest)) do
        (setf (aref dest i) (aref key (aref l i)))))
+
+(defun substitute-if-letter (ch key)
+  (cond ((and (char>= ch #\A) (char<= ch #\Z))
+	 (code-char (+ (char-code #\A) (aref key (- (char-code ch) (char-code #\A))))))
+	((and (char>= ch #\a) (char<= ch #\z))
+	 (code-char (+ (char-code #\A) (aref key (- (char-code ch) (char-code #\a))))))
+	(t ch)))
+
+(defun do-substitution-with-word-breaks (l key)
+  (map 'string (lambda (ch) (substitute-if-letter ch key)) l))

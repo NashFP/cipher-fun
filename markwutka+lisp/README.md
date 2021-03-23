@@ -117,7 +117,7 @@ To try the shotgun-hillclimbing, you can do this:
 (load "shotgun-hillclimb.lisp")
 (load "scoring.lisp")
 (load "quotes.lisp")
-(setf enable1 (load-dawg "enable1.daw"))
+(setf enable1 (load-dawg "../resources/enable1.daw"))
 (setf plaintext (string-to-26 mccarthy-oldest))
 (setf enc-key (make-key "johnmccarthy" 10))
 (setf ciphertext (do-substitution plaintext enc-key))

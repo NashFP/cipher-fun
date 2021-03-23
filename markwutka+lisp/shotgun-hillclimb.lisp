@@ -41,13 +41,13 @@
 	;;; time we try a decrypt
 	(plaintext (make-array (length ciphertext) :initial-element 0)))
     (labels ((hillclimb-iter (swap best-key best-score)
-	       ;;; if there are no more swaps and the best-key 
+	       ;;; if there are no more swaps and the best-key is the same
+	       ;;; as the start key, there is nothing else to try
 	       (if (null swap) (if (equalp best-key start-key) (values best-key best-score)
 				   ;;; Otherwise, we made an improvement, try going through
 				   ;;; the possible swaps again to find another improvement
-				   (progn
-				     (hillclimb-start (map 'vector #'identity best-key)
-						      ciphertext dawg best-score scoring-func)))
+				   (hillclimb-start best-key
+						    ciphertext dawg best-score scoring-func))
 		   ;;; There's another swap to try...
 		   (progn
 		     ;;; Do the swap
@@ -105,7 +105,8 @@
 	       (multiple-value-bind (best-key next-best-score)
 		   (hillclimb key ciphertext dawg scoring-func)
 		 (if (> next-best-score best-score)
-		     (format t "Score ~A with key ~A: ~A~%" next-best-score (string-from-26 (invert-key best-key))
+		     (format t "Score ~A with key ~A: ~A~%" next-best-score
+			     (string-from-26 (invert-key best-key))
 			     (string-from-26 (do-substitution ciphertext best-key))))
 		 (if (should-quit best-key ciphertext dawg scoring-func coverage-pct)
 		     best-key
